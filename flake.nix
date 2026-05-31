@@ -56,7 +56,16 @@
       build = pkgs:
         let
           inherit (pkgs) lib stdenv;
-          needsPreset = !(stdenv.buildPlatform.canExecute stdenv.hostPlatform);
+          # Preset only when the build box can't run the target's binaries AND
+          # the target is Linux: the harvested config.h comes from an
+          # x86_64-linux musl build, so its values are right for every Linux
+          # cross (ppc64le/riscv64/armv7l — same OS, same libc) but WRONG for a
+          # darwin host (e.g. HAVE_ENDIAN=1 → dbm.c includes a <endian.h> macOS
+          # doesn't have). The darwin-x86_64 cross (canExecute=false from an
+          # aarch64-darwin runner) instead runs the real probes under Rosetta,
+          # which is what the native x86_64-darwin build does too.
+          needsPreset = stdenv.hostPlatform.isLinux
+            && !(stdenv.buildPlatform.canExecute stdenv.hostPlatform);
         in
         pkgs.pkgsStatic.mandoc.overrideAttrs (old: {
           pname = "man";
@@ -66,15 +75,25 @@
           '';
           # On a target the build box can't run, preset HAVE_* from a native
           # musl probe so ./configure executes nothing (see probeConfigH).
-          # NEED_GNU_SOURCE is a singletest side effect, not a config.h HAVE_
-          # flag, so it isn't harvested above — but presetting HAVE_* skips the
-          # test that would set it, and musl gates strcasestr/strndup/… (used by
-          # mandoc) behind _GNU_SOURCE. Set it explicitly so config.h emits
-          # `#define _GNU_SOURCE` and those decls are visible.
           preConfigure = (old.preConfigure or "") + lib.optionalString needsPreset ''
             sed -n 's/^#define \(HAVE_[A-Z0-9_]*\) \([0-9]*\)$/\1=\2/p' \
               ${probeConfigH "x86_64-linux"}/config.h >> configure.local
-            echo 'NEED_GNU_SOURCE=1' >> configure.local
+            # mandoc's configure only writes a `#define HAVE_X` to config.h when
+            # X is ABSENT (to emit a compat shim); a present feature leaves no
+            # trace, so the harvest above can't see it. Pin the ones musl always
+            # provides — without these the cross probe compiles but can't exec,
+            # falls to HAVE_X=0, and config.h diverges from the native build:
+            #   NANOSLEEP — a "required function"; 0 is a hard `exit 1`.
+            #   O_DIRECTORY / PATH_MAX / ATTRIBUTE — 0 emits a spurious shim
+            #     (#define O_DIRECTORY 0, PATH_MAX 4096, __attribute__(x)) that
+            #     the native build doesn't, so the config wouldn't match.
+            # NEED_GNU_SOURCE is a singletest side effect (not a config.h HAVE_
+            # flag), so it isn't harvested either; musl gates strcasestr/strndup
+            # behind _GNU_SOURCE, so set it to emit `#define _GNU_SOURCE`.
+            for kv in HAVE_NANOSLEEP=1 HAVE_O_DIRECTORY=1 HAVE_PATH_MAX=1 \
+                      HAVE_ATTRIBUTE=1 NEED_GNU_SOURCE=1; do
+              echo "$kv" >> configure.local
+            done
           '';
           # Build ONLY the `man` target: the stock `mandoc` target links
           # main.o, whose `main` we renamed, and would fail to link.
