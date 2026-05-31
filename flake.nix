@@ -39,6 +39,11 @@
       # `unpin man <pkg>` dispatches the verb to the package of the same name.
       pkgsAttr = "mandoc";
 
+      # Windows goes through Cosmopolitan, not mingw: the front-end shells
+      # back to `unpin` with POSIX fork/exec/pipe, which mingw's CRT lacks
+      # but cosmo's libc provides. Recipe in ./cosmo.nix.
+      windowsBuild = import ./cosmo.nix { inherit unpins-lib; };
+
       # `man` is a front-end, not a documented tool — `man --version` would be
       # read as a package name. No quick non-interactive probe, so no smoke.
 
