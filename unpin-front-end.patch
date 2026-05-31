@@ -1,0 +1,24 @@
+--- a/main.c	2026-05-30 23:44:12.314354001 -0300
++++ b/main.c	2026-05-30 23:44:12.318353849 -0300
+@@ -121,7 +121,7 @@
+ 
+ 
+ int
+-main(int argc, char *argv[])
++mandoc_main(int argc, char *argv[])
+ {
+ 	struct manconf	 conf;		/* Manpaths and output options. */
+ 	struct outstate	 outst;		/* Output state. */
+--- a/Makefile	2026-05-30 23:44:12.314354001 -0300
++++ b/Makefile	2026-05-30 23:44:12.318353849 -0300
+@@ -518,8 +518,8 @@
+ mandoc: $(MAIN_OBJS) libmandoc.a
+ 	$(CC) -o $@ $(LDFLAGS) $(MAIN_OBJS) libmandoc.a $(LDADD)
+ 
+-man: mandoc
+-	$(LN) mandoc man
++man: unpin_man.o $(MAIN_OBJS) libmandoc.a
++	$(CC) -o $@ $(LDFLAGS) unpin_man.o $(MAIN_OBJS) libmandoc.a $(LDADD)
+ 
+ man.cgi: $(CGI_OBJS) libmandoc.a
+ 	$(CC) $(STATIC) -o $@ $(LDFLAGS) $(CGI_OBJS) libmandoc.a $(LDADD)
