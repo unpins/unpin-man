@@ -16,11 +16,12 @@ unpins binaries embed their own man pages (`unpin/man/*` entries in an appended 
 ## Usage
 
 ```bash
+unpin man                   # no package → unpin's own manual
 unpin man coreutils ls      # render coreutils' embedded ls(1)
 unpin man jq                # the page named like the package
 ```
 
-`unpin man` dispatches to this package (installing it on first use). Invoked directly as `man <pkg> [page]`, the binary finds unpin via `$UNPIN_SELF` (exported by `unpin run`/`unpin man`), else `unpin` on `$PATH`.
+`unpin man` dispatches to this package (installing it on first use). Invoked directly as `man [pkg] [page]`, the binary finds unpin via `$UNPIN_SELF` (exported by `unpin run`/`unpin man`), else `unpin` on `$PATH`. With no `pkg` it defaults to `unpin`, so a bare `unpin man` shows unpin's own manual.
 
 ## Build locally
 

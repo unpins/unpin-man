@@ -3,7 +3,8 @@
  *
  * unpin knows nothing about man: it only exposes a binary's embedded metadata
  * through `unpin bundle list|dump`. This front-end is the other half — a
- * patched mandoc (the `man` package) that, given `man <pkg> [page]`:
+ * patched mandoc (the `man` package) that, given `man [pkg] [page]` (a missing
+ * pkg defaults to `unpin`, so a bare `unpin man` shows unpin's own manual):
  *
  *   1. runs `$UNPIN_SELF bundle list <pkg>` to enumerate the embedded
  *      embedded `unpin/man/` pages, picking the right (name, section, lang) and
@@ -294,9 +295,8 @@ main(int argc, char *argv[])
 	int		 st;
 	char		*margv[2];
 
-	if (argc < 2)
-		die("usage: man <pkg> [page]");
-	pkg = argv[1];
+	/* No package given (`unpin man`) defaults to unpin's own manual. */
+	pkg = argc > 1 ? argv[1] : "unpin";
 	page = argc > 2 ? argv[2] : pkg;	/* default page = pkg name */
 
 	if ((self = getenv("UNPIN_SELF")) == NULL || self[0] == '\0')
