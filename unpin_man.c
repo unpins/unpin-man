@@ -24,6 +24,7 @@
  * package is still usable when invoked by hand.
  */
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <sys/wait.h>
 
 #include <ctype.h>
@@ -293,7 +294,10 @@ main(int argc, char *argv[])
 	int		 fds[2];
 	pid_t		 pid;
 	int		 st;
-	char		*margv[2];
+	char		*margv[4];
+	int		 margc;
+	char		 oarg[48];
+	struct winsize	 ws;
 
 	/* No package given (`unpin man`) defaults to unpin's own manual. */
 	pkg = argc > 1 ? argv[1] : "unpin";
@@ -363,11 +367,37 @@ main(int argc, char *argv[])
 	 * Render with the original mandoc, forced into file mode (read stdin)
 	 * by a `mandoc` argv[0]; setprogname covers HAVE_PROGNAME builds where
 	 * the arg mode is taken from getprogname() rather than argv[0].
+	 *
+	 * File mode skips mandoc's own terminal sizing (main.c gates it on the
+	 * pager, which it disables for piped input), so the page would render at
+	 * a fixed ~78 columns regardless of the terminal. Reproduce that sizing
+	 * ourselves: sample the tty width once and, mirroring mandoc, shrink for
+	 * narrow terminals (no pager, no resize handling — a man page is a
+	 * one-shot render, like every other `man`).
 	 */
 	setprogname("mandoc");
-	margv[0] = (char *)"mandoc";
-	margv[1] = NULL;
-	st = mandoc_main(1, margv);
+	margc = 0;
+	margv[margc++] = (char *)"mandoc";
+	if (isatty(STDOUT_FILENO) &&
+	    ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) != -1 && ws.ws_col > 1) {
+		int width = ws.ws_col < 79 ? ws.ws_col - 1 : 0;
+		int indent = ws.ws_col < 66 ? 3 : 0;
+
+		if (width != 0 || indent != 0) {
+			char wbuf[24] = "", ibuf[24] = "";
+
+			if (width != 0)
+				snprintf(wbuf, sizeof(wbuf), "width=%d", width);
+			if (indent != 0)
+				snprintf(ibuf, sizeof(ibuf), "%sindent=%d",
+				    width != 0 ? "," : "", indent);
+			snprintf(oarg, sizeof(oarg), "%s%s", wbuf, ibuf);
+			margv[margc++] = (char *)"-O";
+			margv[margc++] = oarg;
+		}
+	}
+	margv[margc] = NULL;
+	st = mandoc_main(margc, margv);
 
 	while (waitpid(pid, &(int){0}, 0) == -1 && errno == EINTR)
 		;
