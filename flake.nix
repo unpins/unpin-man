@@ -57,13 +57,24 @@
         let
           inherit (pkgs) lib stdenv;
           # Preset only when the build box can't run the target's binaries AND
-          # the target is Linux: the harvested config.h comes from an
-          # x86_64-linux musl build, so its values are right for every Linux
-          # cross (ppc64le/riscv64/armv7l — same OS, same libc) but WRONG for a
-          # darwin host (e.g. HAVE_ENDIAN=1 → dbm.c includes a <endian.h> macOS
-          # doesn't have). The darwin-x86_64 cross (canExecute=false from an
-          # aarch64-darwin runner) instead runs the real probes under Rosetta,
-          # which is what the native x86_64-darwin build does too.
+          # the target is Linux: the harvested config.h comes from a native
+          # musl build on the BUILD platform (probeConfigH, below). The HAVE_*
+          # are libc features, identical across Linux musl arches, so any Linux
+          # build platform is right for any Linux cross (same OS, same libc) —
+          # but WRONG for a darwin host (e.g. HAVE_ENDIAN=1 → dbm.c includes a
+          # <endian.h> macOS doesn't have). The darwin-x86_64 cross
+          # (canExecute=false from an aarch64-darwin runner) instead runs the
+          # real probes under Rosetta, which is what the native x86_64-darwin
+          # build does too.
+          #
+          # Key the probe to the build platform, NOT a fixed system: CI cross-
+          # builds ppc64le/riscv64 on x86_64-linux runners but armv7l on an
+          # aarch64-linux runner (nix-lib gates "linux-armv7l" on aarch64). A
+          # hardcoded x86_64-linux probe is unbuildable on the arm runner — it
+          # only ever passed by *substituting* the path the x86_64 jobs push to
+          # cachix, a cross-job cache race that fails whenever the armv7l job
+          # runs ahead of them. buildPlatform.system builds the probe natively
+          # on whichever runner the job lands on.
           needsPreset = stdenv.hostPlatform.isLinux
             && !(stdenv.buildPlatform.canExecute stdenv.hostPlatform);
         in
@@ -77,7 +88,7 @@
           # musl probe so ./configure executes nothing (see probeConfigH).
           preConfigure = (old.preConfigure or "") + lib.optionalString needsPreset ''
             sed -n 's/^#define \(HAVE_[A-Z0-9_]*\) \([0-9]*\)$/\1=\2/p' \
-              ${probeConfigH "x86_64-linux"}/config.h >> configure.local
+              ${probeConfigH stdenv.buildPlatform.system}/config.h >> configure.local
             # mandoc's configure only writes a `#define HAVE_X` to config.h when
             # X is ABSENT (to emit a compat shim); a present feature leaves no
             # trace, so the harvest above can't see it. Pin the ones musl always
