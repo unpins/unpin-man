@@ -21,7 +21,7 @@ unpin man coreutils ls      # render coreutils' embedded ls(1)
 unpin man jq                # the page named like the package
 ```
 
-`unpin man` dispatches to this package (installing it on first use). Invoked directly as `man [pkg] [page]`, the binary finds unpin via `$UNPIN_SELF` (exported by `unpin run`/`unpin man`), else `unpin` on `$PATH`. With no `pkg` it defaults to `unpin`, so a bare `unpin man` shows unpin's own manual.
+`unpin man` runs this package, installing it on first use. With no package name it defaults to `unpin`, so a bare `unpin man` shows unpin's own manual.
 
 ## Build locally
 
@@ -34,7 +34,7 @@ The first invocation will offer to add the [unpins.cachix.org](https://unpins.ca
 
 ## Build notes
 
-- **Front-end, not a `man(1)` clone.** `unpin-front-end.patch` renames mandoc's `main` to `mandoc_main` and relinks the `man` target around `unpin_man.c`, which resolves the page over `unpin bundle list|dump` and feeds the roff to `mandoc_main` on stdin. None of mandoc's `/usr/share/man` search, `apropos`, or `makewhatis` machinery is reached.
+- **Front-end, not a `man(1)` clone.** `unpin-front-end.patch` renames mandoc's `main` to `mandoc_main` and relinks the `man` target around `unpin_man.c`, which resolves the page over `unpin bundle list|dump` and feeds the roff to `mandoc_main` on stdin. None of mandoc's `/usr/share/man` search, `apropos`, or `makewhatis` machinery is reached. Invoked directly as `man [pkg] [page]`, it finds unpin via `$UNPIN_SELF` (exported by `unpin run`/`unpin man`), else `unpin` on `$PATH`.
 - **No `--version` / no smoke test.** A lone argument is read as a package name, so there is no non-interactive probe to assert on.
 - **No embedded man of its own.** It ships only the front-end; the pages it renders belong to *other* packages, so `unpin man man` has nothing to show.
 - **Windows uses [Cosmopolitan](https://justine.lol/cosmopolitan/) (cosmocc), not mingw.** The front-end shells back to `unpin` with POSIX `fork`/`exec`/`pipe`, which mingw's CRT lacks but cosmo's libc provides. See `cosmo.nix`.
