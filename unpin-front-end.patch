@@ -1,5 +1,5 @@
---- a/main.c	2026-05-30 23:44:12.314354001 -0300
-+++ b/main.c	2026-05-30 23:44:12.318353849 -0300
+--- a/main.c	2021-09-23 15:03:23.000000000 -0300
++++ b/main.c	2026-06-06 19:30:23.518855778 -0300
 @@ -121,7 +121,7 @@
  
  
@@ -9,8 +9,8 @@
  {
  	struct manconf	 conf;		/* Manpaths and output options. */
  	struct outstate	 outst;		/* Output state. */
---- a/Makefile	2026-05-30 23:44:12.314354001 -0300
-+++ b/Makefile	2026-05-30 23:44:12.318353849 -0300
+--- a/Makefile	2021-09-23 15:03:23.000000000 -0300
++++ b/Makefile	2026-06-06 19:30:23.518855778 -0300
 @@ -518,8 +518,8 @@
  mandoc: $(MAIN_OBJS) libmandoc.a
  	$(CC) -o $@ $(LDFLAGS) $(MAIN_OBJS) libmandoc.a $(LDADD)
@@ -22,3 +22,85 @@
  
  man.cgi: $(CGI_OBJS) libmandoc.a
  	$(CC) $(STATIC) -o $@ $(LDFLAGS) $(CGI_OBJS) libmandoc.a $(LDADD)
+--- a/term.h	2021-09-23 15:03:23.000000000 -0300
++++ b/term.h	2026-06-06 19:30:23.522855620 -0300
+@@ -121,6 +121,7 @@
+ 	const void	 *argf;		/* arg for headf/footf */
+ 	const char	 *mc;		/* Margin character. */
+ 	struct termp_ps	 *ps;
++	FILE		 *fp;		/* tty output sink (default stdout). */
+ };
+ 
+ 
+--- a/term_ascii.c	2021-09-23 15:03:23.000000000 -0300
++++ b/term_ascii.c	2026-06-06 19:30:23.526855461 -0300
+@@ -70,6 +70,7 @@
+ 	p = mandoc_calloc(1, sizeof(*p));
+ 	p->tcol = p->tcols = mandoc_calloc(1, sizeof(*p->tcol));
+ 	p->maxtcol = 1;
++	p->fp = stdout;		/* term_set_output() can redirect to a buffer */
+ 
+ 	p->line = 1;
+ 	p->defrmargin = p->lastrmargin = 78;
+@@ -210,7 +211,7 @@
+ ascii_letter(struct termp *p, int c)
+ {
+ 
+-	putchar(c);
++	putc(c, p->fp);
+ }
+ 
+ static void
+@@ -237,7 +238,7 @@
+ 	else
+ 		p->tcol->offset = 0;
+ 	p->ti = 0;
+-	putchar('\n');
++	putc('\n', p->fp);
+ }
+ 
+ static void
+@@ -254,7 +255,7 @@
+ 	if (len > 256)
+ 		len = 256;
+ 	for (i = 0; i < len; i++)
+-		putchar(' ');
++		putc(' ', p->fp);
+ }
+ 
+ static int
+@@ -399,7 +400,7 @@
+ 	if (len > 256)
+ 		len = 256;
+ 	for (i = 0; i < len; i++)
+-		putwchar(L' ');
++		putwc(L' ', p->fp);
+ }
+ 
+ static void
+@@ -412,13 +413,13 @@
+ 	else 
+ 		p->tcol->offset = 0;
+ 	p->ti = 0;
+-	putwchar(L'\n');
++	putwc(L'\n', p->fp);
+ }
+ 
+ static void
+ locale_letter(struct termp *p, int c)
+ {
+ 
+-	putwchar(c);
++	putwc(c, p->fp);
+ }
+ #endif
+--- a/term_tab.c	2021-09-23 15:03:23.000000000 -0300
++++ b/term_tab.c	2026-06-06 19:30:23.530855302 -0300
+@@ -19,6 +19,7 @@
+ #include <sys/types.h>
+ 
+ #include <stddef.h>
++#include <stdio.h>	/* struct termp now carries a FILE *fp. */
+ 
+ #include "mandoc_aux.h"
+ #include "out.h"
