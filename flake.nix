@@ -37,13 +37,10 @@
       name = "unpin-man";
       # This is the `unpin man` verb's helper, so it's named `unpin-man` per the
       # helper-verb convention (docs/helper-verbs.md): reached only via
-      # `unpin man`, fetched on demand, never linked onto PATH. The produced
-      # binary stays `man` (`binName`) — it's mandoc's `man` front-end target,
-      # and the name is invisible since `run` picks the sole executable and the
-      # linker skips PATH for `unpins/unpin-*`. Keeping `binName = "man"` leaves
-      # the whole build/install/apelink chain (CI-green) byte-identical; only the
-      # published asset prefix changes (man-* → unpin-man-*).
-      binName = "man";
+      # `unpin man`, fetched on demand, never linked onto PATH. mandoc's build
+      # target is `man` (buildFlags below); we install it as `unpin-man` so the
+      # binary, the published asset, and the package name all agree — action-build
+      # locates the primary at `bin/<name>`, so `binName` must match `name`.
       pkgsAttr = "mandoc";
 
       # Windows goes through Cosmopolitan, not mingw: the front-end shells
@@ -121,7 +118,7 @@
           doCheck = false;
           installPhase = ''
             runHook preInstall
-            install -Dm755 man $out/bin/man
+            install -Dm755 man $out/bin/unpin-man
             runHook postInstall
           '';
           # nixpkgs' broken = (build.system != host.system) is too coarse for a

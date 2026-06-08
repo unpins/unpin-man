@@ -27,7 +27,7 @@ unpin man jq                # the page named like the package
 
 ```bash
 nix build github:unpins/unpin-man
-UNPIN_SELF="$(command -v unpin)" ./result/bin/man unpin
+UNPIN_SELF="$(command -v unpin)" ./result/bin/unpin-man unpin
 ```
 
 The first invocation will offer to add the [unpins.cachix.org](https://unpins.cachix.org) substituter so most pulls come pre-built.

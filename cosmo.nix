@@ -12,8 +12,9 @@
 # probes (correctly detecting NEED_GNU_SOURCE, HAVE_WCHAR, …) — same as
 # coreutils' autoconf configure does under this stdenv.
 #
-# ELF → PE32+ rename to `man.exe` happens automatically via the cosmo cross
-# stdenv's apelink setup hook in fixupPhase; installPhase ships plain `man`.
+# ELF → PE32+ rename to `unpin-man.exe` happens automatically via the cosmo
+# cross stdenv's apelink setup hook in fixupPhase; installPhase ships `unpin-man`
+# (mandoc's build target is `man`; we install it under the package name).
 { unpins-lib }:
 pkgs:
 let
@@ -41,7 +42,7 @@ cosmoPkgs.mandoc.overrideAttrs (old: {
   doCheck = false;
   installPhase = ''
     runHook preInstall
-    install -Dm755 man $out/bin/man
+    install -Dm755 man $out/bin/unpin-man
     runHook postInstall
   '';
   # nixpkgs' broken = (build.system != host.system) is too coarse for the
