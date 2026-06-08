@@ -1,8 +1,8 @@
-# man
+# unpin-man
 
-Standalone build of [mandoc](https://mandoc.bsd.lv/), patched to render the man pages that [unpins](https://unpins.org) binaries carry inside themselves.
+Standalone build of [mandoc](https://mandoc.bsd.lv/), patched to render the man pages that [unpins](https://unpins.org) programs carry inside themselves. It is the helper behind the `unpin man` verb — fetched on demand, never placed on `PATH`.
 
-[![CI](https://github.com/unpins/man/actions/workflows/man.yml/badge.svg)](https://github.com/unpins/man/actions)
+[![CI](https://github.com/unpins/unpin-man/actions/workflows/unpin-man.yml/badge.svg)](https://github.com/unpins/unpin-man/actions)
 ![Linux](https://img.shields.io/badge/Linux-✓-success?logo=linux&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-✓-success?logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-✓-success?logo=windows&logoColor=white)
@@ -21,12 +21,12 @@ unpin man coreutils ls      # render coreutils' embedded ls(1)
 unpin man jq                # the page named like the package
 ```
 
-`unpin man` runs this package, installing it on first use. With no package name it defaults to `unpin`, so a bare `unpin man` shows unpin's own manual.
+`unpin man` fetches and runs this package on demand (cached after first use, never linked onto `PATH` — it's a verb, not a command you install, so it can't shadow your system `man(1)`). With no package name it defaults to `unpin`, so a bare `unpin man` shows unpin's own manual.
 
 ## Build locally
 
 ```bash
-nix build github:unpins/man
+nix build github:unpins/unpin-man
 UNPIN_SELF="$(command -v unpin)" ./result/bin/man unpin
 ```
 

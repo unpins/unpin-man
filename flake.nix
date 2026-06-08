@@ -1,5 +1,5 @@
 {
-  description = "Standalone build of man — a patched mandoc that renders unpins' embedded manuals";
+  description = "The unpin man renderer — a patched mandoc that renders the manuals unpins programs carry inside themselves";
 
   nixConfig = {
     extra-substituters = [ "https://unpins.cachix.org" ];
@@ -34,9 +34,16 @@
     in
     unpins-lib.lib.mkStandaloneFlake {
       inherit self;
-      name = "man";
-      # nixpkgs ships the renderer as `mandoc`; we ship it as `man` because
-      # `unpin man <pkg>` dispatches the verb to the package of the same name.
+      name = "unpin-man";
+      # This is the `unpin man` verb's helper, so it's named `unpin-man` per the
+      # helper-verb convention (docs/helper-verbs.md): reached only via
+      # `unpin man`, fetched on demand, never linked onto PATH. The produced
+      # binary stays `man` (`binName`) — it's mandoc's `man` front-end target,
+      # and the name is invisible since `run` picks the sole executable and the
+      # linker skips PATH for `unpins/unpin-*`. Keeping `binName = "man"` leaves
+      # the whole build/install/apelink chain (CI-green) byte-identical; only the
+      # published asset prefix changes (man-* → unpin-man-*).
+      binName = "man";
       pkgsAttr = "mandoc";
 
       # Windows goes through Cosmopolitan, not mingw: the front-end shells
