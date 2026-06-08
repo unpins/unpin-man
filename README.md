@@ -1,13 +1,13 @@
 # unpin-man
 
-Standalone build of [mandoc](https://mandoc.bsd.lv/), patched to render the man pages that [unpins](https://unpins.org) programs carry inside themselves. It is the helper behind the `unpin man` verb — fetched on demand, never placed on `PATH`.
+[mandoc](https://mandoc.bsd.lv/) as a single self-contained binary, built natively for Linux, macOS, and Windows — patched to render the man pages that [unpins](https://unpins.org) programs carry inside themselves. It is the helper behind the `unpin man` verb, fetched on demand and never placed on `PATH`.
 
 [![CI](https://github.com/unpins/unpin-man/actions/workflows/unpin-man.yml/badge.svg)](https://github.com/unpins/unpin-man/actions)
 ![Linux](https://img.shields.io/badge/Linux-✓-success?logo=linux&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-✓-success?logo=apple&logoColor=white)
 ![Windows](https://img.shields.io/badge/Windows-✓-success?logo=windows&logoColor=white)
 
-Part of the [unpins](https://unpins.org) project — native single-binary builds with no third-party runtime dependencies.
+Part of the [unpins](https://unpins.org) project.
 
 ## What it is
 
