@@ -16,7 +16,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdio.h>	/* struct termp carries a FILE *fp output sink. */
+#include <stdio.h>	/* for FILE, used by includers of this header. */
 
 enum	termenc {
 	TERMENC_ASCII,

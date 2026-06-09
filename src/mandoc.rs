@@ -73,7 +73,7 @@ fn render_raw(roff: &str, width: u16) -> Option<String> {
 /// output column: bold as `c\bc`, underline as `_\bc`, bold+underline as
 /// `_\bc\bc`. Per column: a real glyph appearing twice or more ⇒ bold; an
 /// underscore overstruck with a glyph ⇒ underline; a lone underscore stays
-/// literal. Ported from the C front-end's `process_line` (unpin_man.c).
+/// literal. Ported from the original C front-end's `process_line`.
 fn overstrike_to_ansi(line: &str) -> String {
     let chars: Vec<char> = line.chars().collect();
     let mut out = String::with_capacity(line.len());
