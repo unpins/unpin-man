@@ -1,0 +1,31 @@
+[package]
+name = "unpin-man"
+version = "0.1.0"
+edition = "2024"
+description = "The unpin man renderer — renders the manual pages an unpins program carries inside itself (the `unpin man` verb)."
+license = "MIT"
+repository = "https://github.com/unpins/unpin-man"
+homepage = "https://unpins.org"
+
+[[bin]]
+name = "unpin-man"
+path = "src/main.rs"
+
+[build-dependencies]
+# cc: compiles the vendored mandoc render-only subset (vendor/mandoc) and the
+# C bridge into a static lib the crate links. build.rs synthesises config.h per
+# target libc family (no ./configure, so it cross-compiles like the rest of unpin).
+cc = "1"
+
+[dependencies]
+# crossterm: the cross-platform terminal layer the pager drives directly (raw
+# mode, the alternate screen, key events, SGR). Pure Rust, no C — so it
+# cross-compiles statically to every unpin target, including a native Windows
+# `.exe` via mingw, with no cosmo. This is the same crossterm unpin-readme pages
+# with (it reaches it through termimad); we depend on it directly because a man
+# page is pre-rendered ANSI from mandoc, not markdown, so there is no MadView.
+crossterm = "0.29"
+
+[profile.release]
+strip = true
+lto = true

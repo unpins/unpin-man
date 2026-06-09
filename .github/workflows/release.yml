@@ -12,4 +12,13 @@ jobs:
     permissions:
       contents: write
     uses: unpins/action-build/.github/workflows/release.yml@main
-    secrets: inherit
+    with:
+      # No `.#manifest` in this hand-rolled flake — pass inputs explicitly.
+      package_name: 'unpin-man'
+      package_data: false
+      # Now first-party unpins software, versioned from Cargo.toml (the Rust
+      # crate vendors mandoc as a render library rather than repackaging the
+      # upstream tool) — tags as v<version>, like unpin and unpin-readme.
+      own_software: true
+    secrets:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}

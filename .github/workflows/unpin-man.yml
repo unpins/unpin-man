@@ -11,7 +11,17 @@ concurrency:
 
 jobs:
   build:
+    # action-build/build.yml has a nested `release` job declaring
+    # `contents: write`. GitHub checks permissions statically, so the caller
+    # must grant it even though we never set create_release=true here.
     permissions:
       contents: write
     uses: unpins/action-build/.github/workflows/build.yml@main
-    secrets: inherit
+    with:
+      # Hand-rolled Rust flake (mirrors unpins/unpin-readme) — no
+      # mkStandaloneFlake, so there is no `.#manifest` for action-build to read.
+      # Pass the inputs explicitly, or it errors on a missing package_name.
+      package_name: 'unpin-man'
+      package_data: false
+    secrets:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
